@@ -437,7 +437,6 @@ class Node(BaseModel, NodeContent):
         tags_changed = self._process_changes_in_tags()
         
         super(Node, self).save(*args, **kwargs)
-        
         if tags_changed: self.tags = list(Tag.objects.filter(name__in=self.tagname_list()))
 
     class Meta:

@@ -54,6 +54,10 @@ class CachedQuerySet(models.query.QuerySet):
     def obj_from_datadict(self, datadict):
         obj = self.model()
         obj.__dict__.update(datadict)
+
+        if hasattr(obj, '_state'):
+            obj._state.db = 'default'
+
         return obj
 
     def _base_clone(self):
@@ -95,40 +99,40 @@ class CachedQuerySet(models.query.QuerySet):
 
         cached_result = cache.get(cache_key)
 
-        if cached_result:
+        if cached_result and self.model._is_cached_result_valid(cached_result[0]):
             cached_time, result = cached_result
 
-            if self.model._is_cached_result_valid(cached_time):
-                for key, get_query in result:
-                    cached_row = cache.get(key)
+            for key, get_query in result:
+                cached_row = cache.get(key)
 
-                    if cached_row is not None:
-                        yield self.obj_from_datadict(cached_row)
-                    else:
-                        yield self.model.objects.get(**get_query)
-
-        to_cache = []
-
-        if not len(self.query.aggregates):
-            on_cache_query_attr = self.model.value_to_list_on_cache_query()
-            values_list = [on_cache_query_attr]
-
-            if len(self.query.extra):
-                extra_keys = self.query.extra.keys()
-                values_list += extra_keys
-
-            for values in self.values_list(*values_list):
-                get_query = {on_cache_query_attr: values[0]}
-                row = self.model.objects.get(**get_query)
-                to_cache.append((row.cache_key(), {on_cache_query_attr: row.__dict__[on_cache_query_attr]}))
-                yield row
-
+                if cached_row is not None:
+                    yield self.obj_from_datadict(cached_row)
+                else:
+                    yield self.model.objects.get(**get_query)
         else:
-            for row in super(CachedQuerySet, self).iterator():
-                to_cache.append((row.cache_key(), row.id))
-                yield row
 
-        cache.set(cache_key, (datetime.datetime.now(), to_cache), 60 * 60)
+            to_cache = []
+            on_cache_query_attr = self.model.value_to_list_on_cache_query()
+
+            if not len(self.query.aggregates):
+                values_list = [on_cache_query_attr]
+
+                if len(self.query.extra):
+                    extra_keys = self.query.extra.keys()
+                    values_list += extra_keys
+
+                for values in self.values_list(*values_list):
+                    get_query = {on_cache_query_attr: values[0]}
+                    row = self.model.objects.get(**get_query)
+                    to_cache.append((row.cache_key(), get_query))
+                    yield row
+
+            else:
+                for row in super(CachedQuerySet, self).iterator():
+                    to_cache.append((row.cache_key(), {on_cache_query_attr: row.__dict__[on_cache_query_attr]}))
+                    yield row
+
+            cache.set(cache_key, (datetime.datetime.now(), to_cache), 60 * 60)
 
     def _yeld_result(self, result):
         pass
