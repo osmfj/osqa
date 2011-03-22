@@ -377,7 +377,7 @@ class Node(BaseModel, NodeContent):
             for name in tag_changes['added']:
                 try:
                     tag = Tag.objects.get(name=name)
-                except:
+                except Tag.DoesNotExist:
                     tag = Tag.objects.create(name=name, created_by=self._last_active_user())
 
                 if not self.nis.deleted:
