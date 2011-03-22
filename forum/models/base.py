@@ -56,6 +56,9 @@ class CachedQuerySet(models.query.QuerySet):
         obj.__dict__.update(datadict)
         return obj
 
+    def _base_clone(self):
+        return self._clone(klass=models.query.QuerySet)
+
     def get(self, *args, **kwargs):
         key = self.model.infer_cache_key(kwargs)
 
@@ -63,7 +66,7 @@ class CachedQuerySet(models.query.QuerySet):
             obj = cache.get(key)
 
             if obj is None:
-                obj = self.model.base_objects.get(*args, **kwargs)
+                obj = self._base_clone().get(*args, **kwargs)
                 obj.cache()
             else:
                 obj = self.obj_from_datadict(obj)
@@ -71,7 +74,7 @@ class CachedQuerySet(models.query.QuerySet):
 
             return obj
 
-        return self.model.base_objects.get(*args, **kwargs)
+        return self._base_clone().get(*args, **kwargs)
 
     def count(self):
         cache_key = self.model._generate_cache_key("CNT:%s" % self._get_query_hash())
@@ -196,7 +199,6 @@ class BaseModel(models.Model):
     __metaclass__ = BaseMetaClass
 
     objects = CachedManager()
-    base_objects = models.Manager()
 
     class Meta:
         abstract = True
