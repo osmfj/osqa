@@ -38,8 +38,8 @@ class BadgesMeta(type):
             for action in badge.listen_to:
                 action.hook(hook)
 
-            BadgesMeta.by_class[name] = badge
-            BadgesMeta.by_id[ondb.id] = badge
+            BadgesMeta.by_class[name] = inst
+            BadgesMeta.by_id[ondb.id] = inst
 
         return badge
 
