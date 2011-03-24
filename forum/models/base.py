@@ -87,35 +87,40 @@ class CachedQuerySet(models.query.QuerySet):
 
         return self._base_clone().get(*args, **kwargs)
 
+    def _fetch_from_query_cache(self, key):
+        invalidation_key = self.model._get_cache_query_invalidation_key()
+        cached_result = cache.get_many([invalidation_key, key])
+
+        if not invalidation_key in cached_result:
+            self.model._set_query_cache_invalidation_timestamp()
+            return None
+
+        if (key in cached_result) and(cached_result[invalidation_key] < cached_result[key][0]):
+            return cached_result[key][1]
+
+        return None
+
     def count(self):
         cache_key = self.model._generate_cache_key("CNT:%s" % self._get_query_hash())
-        cached_result = cache.get(cache_key)
+        result = self._fetch_from_query_cache(cache_key)
 
-        if cached_result:
-            cached_time, result = cached_result
-
-            if self.model._is_cached_result_valid(cached_time):
-                return result
+        if result is not None:
+            return result
 
         result = super(CachedQuerySet, self).count()
         cache.set(cache_key, (datetime.datetime.now(), result), 60 * 60)
         return result
 
     def iterator(self):
-
         cache_key = self.model._generate_cache_key("QUERY:%s" % self._get_query_hash())
         on_cache_query_attr = self.model.value_to_list_on_cache_query()
-        cached_result = cache.get(cache_key)
 
         to_return = None
         to_cache = {}
 
-        key_list = None
+        key_list = self._fetch_from_query_cache(cache_key)
 
-
-        if cached_result and self.model._is_cached_result_valid(cached_result[0]):
-            key_list = cached_result[1]
-        else:
+        if key_list is None:
             if not len(self.query.aggregates):
                 values_list = [on_cache_query_attr]
 
@@ -136,8 +141,6 @@ class CachedQuerySet(models.query.QuerySet):
                 (ck in cached) and self.obj_from_datadict(cached[ck]) or ToFetch(key_list[i]) for i, ck in enumerate(row_keys)
             ]
 
-            print to_return
-
             if len(cached) != len(row_keys):
                 to_fetch = [str(tr) for tr in to_return if isinstance(tr, ToFetch)]
 
@@ -145,9 +148,7 @@ class CachedQuerySet(models.query.QuerySet):
                               models.query.QuerySet(self.model).filter(**{"%s__in" % on_cache_query_attr: to_fetch})])
 
                 to_return = [(isinstance(tr, ToFetch) and fetched[str(tr)] or tr) for tr in to_return]
-
-                for attr, r in fetched.items():
-                    to_cache[self.model.infer_cache_key({on_cache_query_attr: attr})] = r._as_dict()
+                to_cache.update(dict([(self.model.infer_cache_key({on_cache_query_attr: attr}), r._as_dict()) for attr, r in fetched.items()]))
 
         if len(to_cache):
             cache.set_many(to_cache, 60 * 60)
@@ -284,16 +285,6 @@ class BaseModel(models.Model):
 
         for base in filter(lambda c: issubclass(c, BaseModel) and (not c is BaseModel), cls.__bases__):
             base._set_query_cache_invalidation_timestamp()
-
-    @classmethod
-    def _is_cached_result_valid(cls, cached_time):
-        invalidation_time = cache.get(cls._get_cache_query_invalidation_key())
-
-        if invalidation_time:
-            return invalidation_time < cached_time
-
-        cls._set_query_cache_invalidation_timestamp()
-        return False
 
     @classmethod
     def _generate_cache_key(cls, key, group=None):
