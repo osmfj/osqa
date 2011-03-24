@@ -22,6 +22,10 @@ from forum import settings
 import logging
 
 
+if not hasattr(cache, 'get_many'):
+    #put django 1.2 code here
+    pass
+
 class LazyQueryList(object):
     def __init__(self, model, items):
         self.items = items
@@ -36,6 +40,9 @@ class LazyQueryList(object):
 
     def __len__(self):
         return len(self.items)
+
+class ToFetch(str):
+    pass
 
 class CachedQuerySet(models.query.QuerySet):
 
@@ -95,47 +102,62 @@ class CachedQuerySet(models.query.QuerySet):
         return result
 
     def iterator(self):
-        cache_key = self.model._generate_cache_key("QUERY:%s" % self._get_query_hash())
 
+        cache_key = self.model._generate_cache_key("QUERY:%s" % self._get_query_hash())
+        on_cache_query_attr = self.model.value_to_list_on_cache_query()
         cached_result = cache.get(cache_key)
 
+        to_return = None
+        to_cache = {}
+
+        key_list = None
+
+
         if cached_result and self.model._is_cached_result_valid(cached_result[0]):
-            cached_time, result = cached_result
-
-            for key, get_query in result:
-                cached_row = cache.get(key)
-
-                if cached_row is not None:
-                    yield self.obj_from_datadict(cached_row)
-                else:
-                    yield self.model.objects.get(**get_query)
+            key_list = cached_result[1]
         else:
-
-            to_cache = []
-            on_cache_query_attr = self.model.value_to_list_on_cache_query()
-
             if not len(self.query.aggregates):
                 values_list = [on_cache_query_attr]
 
                 if len(self.query.extra):
-                    extra_keys = self.query.extra.keys()
-                    values_list += extra_keys
+                    values_list += self.query.extra.keys()
 
-                for values in self.values_list(*values_list):
-                    get_query = {on_cache_query_attr: values[0]}
-                    row = self.model.objects.get(**get_query)
-                    to_cache.append((row.cache_key(), get_query))
-                    yield row
-
+                key_list = [v[0] for v in self.values_list(*values_list)]
+                to_cache[cache_key] = (datetime.datetime.now(), key_list)
             else:
-                for row in super(CachedQuerySet, self).iterator():
-                    to_cache.append((row.cache_key(), {on_cache_query_attr: row.__dict__[on_cache_query_attr]}))
+                to_return = list(super(CachedQuerySet, self).iterator())
+                to_cache[cache_key] = (datetime.datetime.now(), [row.__dict__[on_cache_query_attr] for row in to_return])
+
+        if (not to_return) and key_list:
+            row_keys = [self.model.infer_cache_key({on_cache_query_attr: attr}) for attr in key_list]
+            cached = cache.get_many(row_keys)
+
+            to_return = [
+                (ck in cached) and self.obj_from_datadict(cached[ck]) or ToFetch(key_list[i]) for i, ck in enumerate(row_keys)
+            ]
+
+            print to_return
+
+            if len(cached) != len(row_keys):
+                to_fetch = [str(tr) for tr in to_return if isinstance(tr, ToFetch)]
+
+                fetched = dict([(str(r.__dict__[on_cache_query_attr]), r) for r in
+                              models.query.QuerySet(self.model).filter(**{"%s__in" % on_cache_query_attr: to_fetch})])
+
+                to_return = [(isinstance(tr, ToFetch) and fetched[str(tr)] or tr) for tr in to_return]
+
+                for attr, r in fetched.items():
+                    to_cache[self.model.infer_cache_key({on_cache_query_attr: attr})] = r._as_dict()
+
+        if len(to_cache):
+            cache.set_many(to_cache, 60 * 60)
+
+        if to_return:
+            for row in to_return:
+                if hasattr(row, 'leaf'):
+                    yield row.leaf
+                else:
                     yield row
-
-            cache.set(cache_key, (datetime.datetime.now(), to_cache), 60 * 60)
-
-    def _yeld_result(self, result):
-        pass
 
     def _get_query_hash(self):
         return md5(str(self.query)).hexdigest()
