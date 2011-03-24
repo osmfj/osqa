@@ -9,6 +9,17 @@ class Registry(list):
 
         self.append(item)
 
+    def find_by_name(self, name):
+        for i in self:
+            if i.name and (i.name == name):
+                return i
+
+    def remove_by_name(self, name):
+        for i, r in enumerate(self):
+            if r.name and (r.name == name):
+                self.pop(i)
+                return
+
 
 HEAD_CONTENT = 'HEAD_CONTENT'
 HEADER_LINKS = 'HEADER_LINKS'
