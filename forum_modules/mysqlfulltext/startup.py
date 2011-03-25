@@ -27,9 +27,9 @@ word_re = re.compile(r'\w+', re.UNICODE)
 
 @decorate(QuestionManager.search, needs_origin=False)
 def question_search(self, keywords):
-    q = "".join(["+%s " % w for w in word_re.findall(keywords)])
+    #q = "".join(["+%s " % w for w in word_re.findall(keywords)])
 
     return False, self.extra(
             where=["MATCH(title, body, tagnames) AGAINST(%s IN BOOLEAN MODE)"],
-            params=[q],
+            params=[keywords],
             )
