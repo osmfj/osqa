@@ -37,7 +37,6 @@ class ActivityNode(template.Node):
 
     def render(self, context):
         try:
-            print self.activity.resolve(context)
             action = self.activity.resolve(context).leaf
             viewer = self.viewer.resolve(context)
             describe = mark_safe(action.describe(viewer))
