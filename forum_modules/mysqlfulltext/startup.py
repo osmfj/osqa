@@ -1,20 +1,22 @@
 from django.db import connection, transaction
-import settings
+import os, settings
 
 import re
-from django.db import connection, transaction
+from django.db import connection, transaction, models
 from django.db.models import Q
 from forum.models.question import Question, QuestionManager
 from forum.models.node import Node
 from forum.modules import decorate
 
-if not bool(settings.MYSQL_FTS_INDEXES_INSTALLED):
+if not bool(settings.MYSQL_FTS_INSTALLED):
+    f = open(os.path.join(os.path.dirname(__file__), 'fts_install.sql'), 'r')
+
     try:
         cursor = connection.cursor()
-        cursor.execute("ALTER TABLE forum_node ADD FULLTEXT(title, body, tagnames);")
+        cursor.execute(f.read())
         transaction.commit_unless_managed()
 
-        settings.MYSQL_FTS_INDEXES_INSTALLED.set_value(True)
+        settings.MYSQL_FTS_INSTALLED.set_value(True)
 
     except Exception, e:
         #import sys, traceback
@@ -23,13 +25,10 @@ if not bool(settings.MYSQL_FTS_INDEXES_INSTALLED):
     finally:
         cursor.close()
 
+    f.close()
+
 word_re = re.compile(r'\w+', re.UNICODE)
 
 @decorate(QuestionManager.search, needs_origin=False)
 def question_search(self, keywords):
-    #q = "".join(["+%s " % w for w in word_re.findall(keywords)])
-
-    return False, self.extra(
-            where=["MATCH(title, body, tagnames) AGAINST(%s IN BOOLEAN MODE)"],
-            params=[keywords],
-            )
+    return False, self.filter(models.Q(ftsindex__title__search=keywords) | models.Q(ftsindex__body__search=keywords) | models.Q(ftsindex__tagnames__search=keywords))
