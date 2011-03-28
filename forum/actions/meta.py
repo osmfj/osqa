@@ -97,10 +97,10 @@ class FlagAction(ActionProxy):
         flag.save()
         self.node.reset_flag_count_cache()
 
-        if self.node.flag_count == int(settings.FLAG_COUNT_TO_HIDE_POST):
+        if self.node.flag_count >= int(settings.FLAG_COUNT_TO_HIDE_POST):
             self.repute(self.node.author, -int(settings.REP_LOST_BY_FLAGGED_3_TIMES))
 
-        if self.node.flag_count == int(settings.FLAG_COUNT_TO_DELETE_POST):
+        if self.node.flag_count >= int(settings.FLAG_COUNT_TO_DELETE_POST):
             self.repute(self.node.author, -int(settings.REP_LOST_BY_FLAGGED_5_TIMES))
             if not self.node.nis.deleted:
                 DeleteAction(node=self.node, user=self.user, extra="BYFLAGGED").save()
@@ -181,6 +181,10 @@ class DeleteAction(ActionProxy):
         
         if self.node.node_type == "answer":
             self.node.question.reset_answer_count_cache()
+
+        # We should notify the current user that the node has been successfully deleted
+        message = _("The <a href=\"%s\">%s</a> has been sucessfully deleted") % (self.node.get_absolute_url(), self.node.node_type)
+        self.user.message_set.create(message=message)
 
     def cancel_action(self):
         self.node.mark_deleted(None)

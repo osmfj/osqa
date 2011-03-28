@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os, tarfile, datetime, logging, re, ConfigParser, shutil, zipfile
 
 from django.core.cache import cache

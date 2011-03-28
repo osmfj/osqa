@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os, tarfile, datetime, ConfigParser, logging
 
 from django.utils.translation import ugettext as _

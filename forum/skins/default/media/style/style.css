@@ -88,6 +88,7 @@ h1 {
     font-size: 160%;
     padding: 5px 0;
     line-height: 110%;
+    overflow: hidden;
 }
 
 h2 {
@@ -885,6 +886,7 @@ span.form-error {
     min-height: 20px;
     padding: 6px;
     width: 98%;
+    overflow: hidden;
 }
 
 .preview-toggle {
@@ -908,9 +910,12 @@ span.form-error {
     width: 100%;
 }
 
+.revision .rev-arrow {
+    cursor: pointer;
+}
+
 .revision .header {
     background-color: #EEEEEE;
-    cursor: pointer;
     padding: 5px;
 }
 
@@ -1315,6 +1320,10 @@ ul.form-horizontal-rows li input {
 
 .tags-container {
     margin: 0 0 16px 0;
+}
+
+#question-tags {
+    margin-top: 15px;
 }
 
 .post-controls {

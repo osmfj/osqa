@@ -12,8 +12,6 @@ SHOW_N_MORE_ACTIVE_NEW_MEMBERS = 5
 SUB_QUESTION_LIST_LENGTH = 5
 TRY_N_USER_TAGS = 5
 
-
-
 class DigestQuestionsIndex(object):
     def __init__(self, from_date):
         self.from_date = from_date
@@ -97,6 +95,9 @@ class Command(NoArgsCommand):
         new_members = User.objects.filter(is_active=True, date_joined__gt=from_date).annotate(n_actions=models.Count('actions')).order_by('-n_actions')
 
         new_member_count = new_members.count()
+
+        # The number of the flagged content for the day
+        flagged_count = Flag.objects.filter(flagged_at__gt=datetime.datetime.today()-datetime.timedelta(days=1)).count()
 
         if new_member_count >= SHOW_N_MORE_ACTIVE_NEW_MEMBERS:
             new_members = new_members[:SHOW_N_MORE_ACTIVE_NEW_MEMBERS]
