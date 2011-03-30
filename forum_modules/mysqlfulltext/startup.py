@@ -31,4 +31,4 @@ word_re = re.compile(r'\w+', re.UNICODE)
 
 @decorate(QuestionManager.search, needs_origin=False)
 def question_search(self, keywords):
-    return False, self.filter(models.Q(ftsindex__title__search=keywords) | models.Q(ftsindex__body__search=keywords) | models.Q(ftsindex__tagnames__search=keywords))
+    return False, self.filter(models.Q(ftsindex__body__search=keywords))
