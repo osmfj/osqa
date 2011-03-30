@@ -17,8 +17,7 @@ class Registry(list):
     def remove_by_name(self, name):
         for i, r in enumerate(self):
             if r.name and (r.name == name):
-                self.pop(i)
-                return
+                return self.pop(i)
 
 
 HEAD_CONTENT = 'HEAD_CONTENT'
