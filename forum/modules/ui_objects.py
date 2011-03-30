@@ -7,7 +7,7 @@ from ui import Registry
 from copy import copy
 
 class Visibility(object):
-    def __init__(self, level='public'):
+    def __init__(self, level='public', negated=False):
         if level not in ['public', 'authenticated', 'staff', 'superuser', 'owner']:
             try:
                 int(level)
@@ -18,7 +18,7 @@ class Visibility(object):
             self.by_reputation = False
 
         self.level = level
-        self.negated = False
+        self.negated = negated
 
     def show_to(self, user):
         if self.by_reputation:
@@ -36,8 +36,7 @@ class Visibility(object):
             return res
 
     def __invert__(self):
-        inverted = copy(self)
-        inverted.negated = True
+        return Visibility(self.level, not self.negated)
         
 
 Visibility.PUBLIC = Visibility('public')
