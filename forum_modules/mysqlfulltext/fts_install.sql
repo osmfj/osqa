@@ -4,7 +4,7 @@ CREATE TABLE forum_mysqlftsindex (
 	body longtext NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (node_id) REFERENCES forum_node (id)   ON UPDATE CASCADE ON DELETE CASCADE,
-	FULLTEXT (title, body, tagnames)
+	FULLTEXT (body)
 ) ENGINE=`MyISAM`;
 
 ALTER TABLE forum_mysqlftsindex CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
