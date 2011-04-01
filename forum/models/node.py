@@ -26,7 +26,7 @@ class NodeContent(models.Model):
         return self.body
 
     def rendered(self, content):
-        return auto_user_link(self, self._as_markdown(content, *['urlize']))
+        return auto_user_link(self, self._as_markdown(content, *['auto_linker']))
 
     @classmethod
     def _as_markdown(cls, content, *extensions):
