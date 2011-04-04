@@ -114,7 +114,7 @@ if DEBUG:
 
 try:
     import south
-    INSTALLED_APPS.append('south')
+    #INSTALLED_APPS.append('south')
 except:
     pass
 
