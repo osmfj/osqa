@@ -37,5 +37,5 @@ class OAuthContext(ConsumerTemplateContext):
     mode = 'BIGICON'
     type = 'DIRECT'
     weight = 150
-    human_name = 'Twitter'
-    icon = '/media/images/openid/twitter.png'
+    human_name = 'OSM Japan'
+    icon = '/media/images/openid/osm_new_logo.png'
