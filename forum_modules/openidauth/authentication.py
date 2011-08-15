@@ -3,7 +3,7 @@ from forum.authentication.base import ConsumerTemplateContext
 
 class OSMJPAuthConsumer(OpenIdAbstractAuthConsumer):
     def get_user_url(self, request):
-        return 'https://www.google.com/accounts/o8/id'
+        return 'http://openstreetmap.jp/user/1/identity'
 
 class OSMJPAuthContext(ConsumerTemplateContext):
     mode = 'BIGICON'
