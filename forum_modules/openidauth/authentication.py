@@ -12,19 +12,16 @@ class GoogleAuthContext(ConsumerTemplateContext):
     human_name = 'Google'
     icon = '/media/images/openid/google.gif'
 
-
-
-class YahooAuthConsumer(OpenIdAbstractAuthConsumer):
+class YahooJPAuthConsumer(OpenIdAbstractAuthConsumer):
     def get_user_url(self, request):
-        return 'http://yahoo.com/'
+        return 'http://yahoo.co.jp/'
 
-class YahooAuthContext(ConsumerTemplateContext):
+class YahooJPAuthContext(ConsumerTemplateContext):
     mode = 'BIGICON'
     type = 'DIRECT'
     weight = 300
-    human_name = 'Yahoo'
-    icon = '/media/images/openid/yahoo.gif'
-
+    human_name = 'YahooJapan'
+    icon = '/media/images/openid/Ymark.gif'
 
 
 class AolAuthConsumer(OpenIdAbstractAuthConsumer):
@@ -72,7 +69,7 @@ class FlickrAuthConsumer(OpenIdAbstractAuthConsumer):
         return "http://flickr.com/%s/" % blog_name
 
 class FlickrAuthContext(ConsumerTemplateContext):
-    mode = 'SMALLICON'
+    mode = 'BIGICON'
     type = 'SIMPLE_FORM'
     simple_form_context = {
         'your_what': 'Flickr user name'
@@ -186,3 +183,15 @@ class OpenIdUrlAuthContext(ConsumerTemplateContext):
     human_name = 'OpenId url'
     stack_item_template = 'modules/openidauth/openidurl.html'
     icon = '/media/images/openid/openid-inputicon.gif'
+
+class OSMJPAuthConsumer(OpenIdAbstractAuthConsumer):
+    def get_user_url(self, request):
+        user_name = request.POST['user_name_field']
+        return 'http://openstreetmap.jp/users/%s/identity' % user_name
+
+class OSMJPAuthContext(ConsumerTemplateContext):
+    mode = 'STACK_ITEM'
+    weight = 290
+    human_name = 'OSM Japan'
+    icon = '/media/images/openid/osm_icon16x16.gif'
+    stack_item_template = 'modules/openidauth/osmopenid.html'
