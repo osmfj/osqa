@@ -6,18 +6,18 @@ class GoogleAuthConsumer(OpenIdAbstractAuthConsumer):
         return 'https://www.google.com/accounts/o8/id'
 
 class GoogleAuthContext(ConsumerTemplateContext):
-    mode = 'BIGICON'
+    mode = 'SMALLICON'
     type = 'DIRECT'
     weight = 200
     human_name = 'Google'
-    icon = '/media/images/openid/google.gif'
+    icon = '/media/images/openid/google.png'
 
 class YahooJPAuthConsumer(OpenIdAbstractAuthConsumer):
     def get_user_url(self, request):
         return 'http://yahoo.co.jp/'
 
 class YahooJPAuthContext(ConsumerTemplateContext):
-    mode = 'BIGICON'
+    mode = 'SMALLICON'
     type = 'DIRECT'
     weight = 300
     human_name = 'YahooJapan'
@@ -53,14 +53,14 @@ class MyOpenIdAuthConsumer(OpenIdAbstractAuthConsumer):
         return "http://%s.myopenid.com/" % blog_name
 
 class MyOpenIdAuthContext(ConsumerTemplateContext):
-    mode = 'BIGICON'
+    mode = 'SMALLICON'
     type = 'SIMPLE_FORM'
     simple_form_context = {
         'your_what': 'MyOpenID user name'
     }
     weight = 400
     human_name = 'MyOpenID'
-    icon = '/media/images/openid/myopenid_big.png'
+    icon = '/media/images/openid/myopenid.png'
 
 
 class FlickrAuthConsumer(OpenIdAbstractAuthConsumer):
@@ -69,7 +69,7 @@ class FlickrAuthConsumer(OpenIdAbstractAuthConsumer):
         return "http://flickr.com/%s/" % blog_name
 
 class FlickrAuthContext(ConsumerTemplateContext):
-    mode = 'BIGICON'
+    mode = 'SMALLICON'
     type = 'SIMPLE_FORM'
     simple_form_context = {
         'your_what': 'Flickr user name'
