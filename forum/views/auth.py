@@ -3,6 +3,7 @@
 import datetime
 import logging
 
+from django.views.decorators.csrf import csrf_exempt 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -75,6 +76,7 @@ def signin_page(request):
             },
             RequestContext(request))
 
+@csrf_exempt 
 def prepare_provider_signin(request, provider):
     force_email_request = request.REQUEST.get('validate_email', 'yes') == 'yes'
     request.session['force_email_request'] = force_email_request
@@ -97,7 +99,7 @@ def prepare_provider_signin(request, provider):
     else:
         raise Http404()
 
-
+@csrf_exempt 
 def process_provider_signin(request, provider):
     if provider in AUTH_PROVIDERS:
         provider_class = AUTH_PROVIDERS[provider].consumer
@@ -149,6 +151,7 @@ def process_provider_signin(request, provider):
 
     return HttpResponseRedirect(reverse('auth_signin'))
 
+@csrf_exempt 
 def external_register(request):
     if request.method == 'POST' and 'bnewaccount' in request.POST:
         form1 = SimpleRegistrationForm(request.POST)
@@ -367,6 +370,7 @@ def remove_external_provider(request, id):
     association.delete()
     return HttpResponseRedirect(reverse('user_authsettings', kwargs={'id': association.user.id}))
 
+@csrf_exempt 
 def login_and_forward(request, user, forward=None, message=None):
     if user.is_suspended():
         return forward_suspended_user(request, user)
