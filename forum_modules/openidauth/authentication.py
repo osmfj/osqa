@@ -1,6 +1,19 @@
 from consumer import OpenIdAbstractAuthConsumer
 from forum.authentication.base import ConsumerTemplateContext
 
+## definition without input but not worked yet.
+##
+#class OSMAuthConsumer(OpenIdAbstractAuthConsumer):
+#    def get_user_url(self, request):
+#        return 'http://openstreetmap.jp'
+#
+#class OSMAuthContext(ConsumerTemplateContext):
+#    mode = 'SMALLICON'
+#    type = 'DIRECT'
+#    weight = 200
+#    human_name = 'OSM'
+#    icon = '/media/images/openid/osm_icon16x16.gif'
+
 class GoogleAuthConsumer(OpenIdAbstractAuthConsumer):
     def get_user_url(self, request):
         return 'https://www.google.com/accounts/o8/id'
@@ -186,7 +199,7 @@ class OpenIdUrlAuthContext(ConsumerTemplateContext):
 
 class OSMJPAuthConsumer(OpenIdAbstractAuthConsumer):
     def get_user_url(self, request):
-        user_name = request.POST['user_name_field']
+        user_name = request.POST['user_name_field'].lower().replace(' ','-')
         return 'http://openstreetmap.jp/users/%s/identity' % user_name
 
 class OSMJPAuthContext(ConsumerTemplateContext):
@@ -195,3 +208,4 @@ class OSMJPAuthContext(ConsumerTemplateContext):
     human_name = 'OSM Japan'
     icon = '/media/images/openid/osm_icon16x16.gif'
     stack_item_template = 'modules/openidauth/osmopenid.html'
+
