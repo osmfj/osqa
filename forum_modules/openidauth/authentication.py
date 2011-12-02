@@ -204,7 +204,7 @@ class OSMJPAuthConsumer(OpenIdAbstractAuthConsumer):
 
 class OSMJPAuthContext(ConsumerTemplateContext):
     mode = 'STACK_ITEM'
-    weight = 290
+    weight = 100
     human_name = 'OSM Japan'
     icon = '/media/images/openid/osm_icon16x16.gif'
     stack_item_template = 'modules/openidauth/osmopenid.html'
